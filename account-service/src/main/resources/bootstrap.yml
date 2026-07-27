@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: account-service
+  config:
+    import: optional:configserver:http://localhost:8888
+  cloud:
+    config:
+      retry:
+        initial-interval: 1000
+        max-interval: 2000
+        max-attempts: 6
+      fail-fast: true
