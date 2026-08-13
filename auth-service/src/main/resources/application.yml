@@ -9,4 +9,19 @@ spring:
         initial-interval: 1000
         max-interval: 2000
         max-attempts: 6
-      fail-fast: true
+      fail-fast: false
+
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: local-dev-secret-key-minimum-32-characters-long-change-in-prod
+  expiration: 86400000
+  refresh-expiration: 604800000

@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: optional:configserver:http://localhost:8888
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,prometheus
+
+# Fallback value for local development
+# In production this comes from Config Server / environment variable
+jwt:
+  secret: local-dev-secret-key-minimum-32-characters-long-change-in-prod
