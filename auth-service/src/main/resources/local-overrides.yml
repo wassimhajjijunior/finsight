@@ -10,9 +10,9 @@ spring:
       port: 6379
 
 server:
-  port: ${SERVER_PORT:18081}
+  port: ${SERVER_PORT:18082}
 
 jwt:
-  secret: local-dev-secret-key-minimum-32-characters-long-change-in-prod
+  secret: your-very-long-secret-key-minimum-256-bits-change-this-in-production
   expiration: 86400000
   refresh-expiration: 604800000
