@@ -13,4 +13,4 @@ management:
 # Fallback value for local development
 # In production this comes from Config Server / environment variable
 jwt:
-  secret: local-dev-secret-key-minimum-32-characters-long-change-in-prod
+  secret: your-very-long-secret-key-minimum-256-bits-change-this-in-production
