@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -99,5 +100,23 @@ public class TransactionService {
                 .transactionDate(t.getTransactionDate())
                 .createdAt(t.getCreatedAt())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getCategorySpending(
+            UUID userId,
+            UUID accountId,
+            String category,
+            LocalDateTime startDate,
+            LocalDateTime endDate) {
+
+        Transaction.TransactionCategory cat =
+                Transaction.TransactionCategory.valueOf(category);
+
+        BigDecimal result = transactionRepository
+                .sumExpensesByAccountAndDateRange(
+                        userId, accountId, startDate, endDate);
+
+        return result != null ? result : BigDecimal.ZERO;
     }
 }
