@@ -16,7 +16,7 @@ public interface AccountClient {
 
     @GetMapping("/accounts/{accountId}/active")
     AccountDto getActiveAccount(
-            @PathVariable UUID accountId,
+            @PathVariable("accountId") UUID accountId,
             @RequestHeader("X-User-Id") String userId
     );
 

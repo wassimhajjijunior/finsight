@@ -123,18 +123,18 @@ public class BudgetService {
      * Notification-service consumes this and sends an alert.
      */
     private void publishThresholdAlert(Budget budget) {
-        Map<String, Object> event = Map.of(
-                "eventType", "budget.threshold.exceeded",
-                "budgetId", budget.getId().toString(),
-                "userId", budget.getUserId().toString(),
-                "budgetName", budget.getName(),
-                "category", budget.getCategory().name(),
-                "amountLimit", budget.getAmountLimit(),
-                "spentAmount", budget.getSpentAmount(),
-                "spentPercentage", budget.getSpentPercentage(),
-                "alertThreshold", budget.getAlertThreshold(),
-                "currency", budget.getCurrency(),
-                "timestamp", LocalDateTime.now().toString()
+        Map<String, Object> event = Map.ofEntries(
+                Map.entry("eventType", "budget.threshold.exceeded"),
+                Map.entry("budgetId", budget.getId().toString()),
+                Map.entry("userId", budget.getUserId().toString()),
+                Map.entry("budgetName", budget.getName()),
+                Map.entry("category", budget.getCategory().name()),
+                Map.entry("amountLimit", budget.getAmountLimit()),
+                Map.entry("spentAmount", budget.getSpentAmount()),
+                Map.entry("spentPercentage", budget.getSpentPercentage()),
+                Map.entry("alertThreshold", budget.getAlertThreshold()),
+                Map.entry("currency", budget.getCurrency()),
+                Map.entry("timestamp", LocalDateTime.now().toString())
         );
 
         kafkaTemplate.send("budget.threshold.exceeded",
