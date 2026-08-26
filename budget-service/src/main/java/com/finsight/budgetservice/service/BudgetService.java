@@ -4,7 +4,10 @@ import com.finsight.budgetservice.client.TransactionClient;
 import com.finsight.budgetservice.dto.BudgetResponse;
 import com.finsight.budgetservice.dto.CreateBudgetRequest;
 import com.finsight.budgetservice.entity.Budget;
+import com.finsight.budgetservice.entity.OutboxEvent;
 import com.finsight.budgetservice.repository.BudgetRepository;
+import com.finsight.budgetservice.repository.OutboxEventRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,6 +32,9 @@ public class BudgetService {
     private final BudgetRepository budgetRepository;
     private final TransactionClient transactionClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public BudgetResponse createBudget(UUID userId,
@@ -123,26 +129,40 @@ public class BudgetService {
      * Notification-service consumes this and sends an alert.
      */
     private void publishThresholdAlert(Budget budget) {
-        Map<String, Object> event = Map.ofEntries(
-                Map.entry("eventType", "budget.threshold.exceeded"),
-                Map.entry("budgetId", budget.getId().toString()),
-                Map.entry("userId", budget.getUserId().toString()),
-                Map.entry("budgetName", budget.getName()),
-                Map.entry("category", budget.getCategory().name()),
-                Map.entry("amountLimit", budget.getAmountLimit()),
-                Map.entry("spentAmount", budget.getSpentAmount()),
-                Map.entry("spentPercentage", budget.getSpentPercentage()),
-                Map.entry("alertThreshold", budget.getAlertThreshold()),
-                Map.entry("currency", budget.getCurrency()),
-                Map.entry("timestamp", LocalDateTime.now().toString())
-        );
+        try {
+            Map<String, Object> eventData = Map.ofEntries(
+                    Map.entry("evenId", UUID.randomUUID().toString()),
+                    Map.entry("eventType", "budget.threshold.exceeded"),
+                    Map.entry("budgetId", budget.getId().toString()),
+                    Map.entry("userId", budget.getUserId().toString()),
+                    Map.entry("budgetName", budget.getName()),
+                    Map.entry("category", budget.getCategory().name()),
+                    Map.entry("amountLimit", budget.getAmountLimit()),
+                    Map.entry("spentAmount", budget.getSpentAmount()),
+                    Map.entry("spentPercentage", budget.getSpentPercentage()),
+                    Map.entry("alertThreshold", budget.getAlertThreshold()),
+                    Map.entry("currency", budget.getCurrency()),
+                    Map.entry("occurredAt", LocalDateTime.now().toString())
+            );
 
-        kafkaTemplate.send("budget.threshold.exceeded",
-                budget.getUserId().toString(), event);
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateId(budget.getId().toString())
+                    .aggregateType("Budget")
+                    .eventType("budget.threshold.exceeded")
+                    .payload(objectMapper.writeValueAsString(eventData))
+                    .published(false)
+                    .build();
 
-        log.info("Published budget.threshold.exceeded: budgetId={} " +
-                        "spent={}%", budget.getId(),
-                String.format("%.1f", budget.getSpentPercentage()));
+            outboxEventRepository.save(outboxEvent);
+
+            log.info("Outbox event saved: budget.threshold.exceeded " +
+                    "budgetId={}", budget.getId());
+
+        }catch (Exception e) {
+            throw new RuntimeException(
+                    "Failed to write budget alert to outbox", e);
+        }
+
     }
 
     private BudgetResponse toResponse(Budget b) {
