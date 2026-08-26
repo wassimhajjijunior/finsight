@@ -1,9 +1,13 @@
 package com.finsight.transactionservice.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finsight.transactionservice.client.AccountClient;
 import com.finsight.transactionservice.dto.CreateTransactionRequest;
 import com.finsight.transactionservice.dto.TransactionResponse;
+import com.finsight.transactionservice.entity.OutboxEvent;
 import com.finsight.transactionservice.entity.Transaction;
+import com.finsight.transactionservice.event.TransactionCreatedEvent;
+import com.finsight.transactionservice.repository.OutboxEventRepository;
 import com.finsight.transactionservice.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +27,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TransactionService {
 
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
     private final TransactionRepository transactionRepository;
     private final AccountClient accountClient;
 
@@ -63,7 +69,43 @@ public class TransactionService {
                 transaction.getId(), userId,
                 transaction.getAmount(), transaction.getType());
 
-        // TODO Step 9: publish transaction.created event to Kafka here
+
+        try {
+            TransactionCreatedEvent event = TransactionCreatedEvent.builder()
+                    .eventId(UUID.randomUUID().toString())
+                    .eventType("transaction.created")
+                    .transactionId(transaction.getId().toString())
+                    .userId(userId.toString())
+                    .accountId(transaction.getAccountId().toString())
+                    .type(transaction.getType().name())
+                    .category(transaction.getCategory().name())
+                    .amount(transaction.getAmount())
+                    .currency(transaction.getCurrency())
+                    .description(transaction.getDescription())
+                    .merchant(transaction.getMerchant())
+                    .transactionDate(transaction.getTransactionDate())
+                    .occurredAt(LocalDateTime.now())
+                    .build();
+
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateId(transaction.getId().toString())
+                    .aggregateType("Transaction")
+                    .eventType("transaction.created")
+                    .payload(objectMapper.writeValueAsString(event))
+                    .published(false)
+                    .build();
+
+            outboxEventRepository.save(outboxEvent);
+
+            log.debug("Outbox event saved for transactionId={}",
+                    transaction.getId());
+
+        } catch (Exception e) {
+            // If outbox write fails, the whole transaction rolls back
+            // Better to fail the transaction than to save without the event
+            throw new RuntimeException(
+                    "Failed to write transaction event to outbox", e);
+        }
 
         return toResponse(transaction);
     }
