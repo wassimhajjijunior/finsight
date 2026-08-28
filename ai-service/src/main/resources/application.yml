@@ -12,3 +12,47 @@ spring:
         max-interval: 2000
         max-attempts: 6
       fail-fast: false
+  datasource:
+    url: jdbc:postgresql://ai-db:5432/ai_db
+    username: ai_user
+    password: ai_pass
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: ai-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+    listener:
+      ack-mode: RECORD
+  ai:
+    openai:
+      base-url: https://api.groq.com/openai/v1
+      api-key: ${GROQ_API_KEY}
+      chat:
+        options:
+          model: llama-3.1-8b-instant
+          temperature: 0.3
+    huggingface:
+      base-url: https://api-inference.huggingface.co
+      api-key: ${HF_API_KEY}
+      embedding:
+        options:
+          model: sentence-transformers/all-MiniLM-L6-v2
+
+server:
+  port: 8085
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
