@@ -12,3 +12,5 @@ spring:
         max-interval: 2000
         max-attempts: 6
       fail-fast: false
+  kafka:
+    bootstrap-servers: ${spring.kafka.bootstrap-servers:localhost:29092}

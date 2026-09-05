@@ -11,6 +11,7 @@ volumes:
   redis-data:
   prometheus-data:
   grafana-data:
+  notification-db-data:
 
 services:
 
@@ -109,6 +110,34 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  notification-db:
+    image: postgres:16-alpine
+    container_name: notification-db
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: notification_pass
+    volumes:
+      - notification-db-data:/var/lib/postgresql/data
+    ports:
+      - "5437:5432"
+    networks:
+      - finsight-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U notification_user -d notification_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - finsight-network
 
 
   redis:
