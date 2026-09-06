@@ -2,6 +2,7 @@ package com.finsight.aiservice.config;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,13 +10,11 @@ import org.springframework.context.annotation.Configuration;
 public class AiConfig {
 
     /**
-     * Build the ChatClient with default configuration.
-     * Spring AI auto-configures the ChatModel bean from application.yml
-     * (OpenAiChatModel via Groq in this case).
-     * The ChatClient is the main entry point for all LLM interactions.
+     * Build the ChatClient with Groq (OpenAI-compatible) as the chat model.
+     * HuggingFace auto-configuration is excluded — it's only used for embeddings.
      */
     @Bean
-    public ChatClient chatClient(ChatModel chatModel) {
+    public ChatClient chatClient(@Qualifier("openAiChatModel") ChatModel chatModel) {
         return ChatClient.builder(chatModel).build();
     }
 }

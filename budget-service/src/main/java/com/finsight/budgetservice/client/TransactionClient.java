@@ -21,9 +21,9 @@ public interface TransactionClient {
     @GetMapping("/transactions/spending-summary")
     BigDecimal getCategorySpending(
             @RequestHeader("X-User-Id") String userId,
-            @RequestParam UUID accountId,
-            @RequestParam String category,
-            @RequestParam LocalDateTime startDate,
-            @RequestParam LocalDateTime endDate
+            @RequestParam(name = "accountId") UUID accountId,
+            @RequestParam(name = "category") String category,
+            @RequestParam(name = "startDate") LocalDateTime startDate,
+            @RequestParam(name = "endDate") LocalDateTime endDate
     );
 }

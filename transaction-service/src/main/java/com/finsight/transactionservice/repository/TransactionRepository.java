@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -35,7 +36,7 @@ public interface TransactionRepository
             "AND t.transactionDate BETWEEN :start AND :end " +
             "GROUP BY t.category")
     List<Object[]> sumExpensesByCategory(
-            UUID userId, LocalDateTime start, LocalDateTime end);
+            @Param("userId") UUID userId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     // Total spending in a date range — used by budget-service via Feign
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
@@ -44,6 +45,6 @@ public interface TransactionRepository
             "AND t.type = 'EXPENSE' " +
             "AND t.transactionDate BETWEEN :start AND :end")
     BigDecimal sumExpensesByAccountAndDateRange(
-            UUID userId, UUID accountId,
-            LocalDateTime start, LocalDateTime end);
+            @Param("userId") UUID userId, @Param("accountId") UUID accountId,
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

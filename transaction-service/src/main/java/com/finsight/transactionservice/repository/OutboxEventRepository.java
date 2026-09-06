@@ -4,6 +4,7 @@ import com.finsight.transactionservice.entity.OutboxEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -25,5 +26,5 @@ public interface OutboxEventRepository
     @Modifying
     @Query("UPDATE OutboxEvent o SET o.published = true, " +
             "o.publishedAt = :publishedAt WHERE o.id IN :ids")
-    void markAsPublished(List<UUID> ids, LocalDateTime publishedAt);
+    void markAsPublished(@Param("ids") List<UUID> ids, @Param("publishedAt") LocalDateTime publishedAt);
 }

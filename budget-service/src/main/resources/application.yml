@@ -2,7 +2,9 @@ spring:
   application:
     name: budget-service
   config:
-    import: optional:configserver:http://localhost:8888
+    import:
+      - optional:configserver:http://localhost:8888
+      - classpath:local-overrides.yml
   cloud:
     config:
       retry:
@@ -10,3 +12,5 @@ spring:
         max-interval: 2000
         max-attempts: 6
       fail-fast: false
+  kafka:
+    bootstrap-servers: ${spring.kafka.bootstrap-servers:localhost:29092}

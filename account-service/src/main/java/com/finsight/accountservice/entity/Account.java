@@ -3,7 +3,9 @@ package com.finsight.accountservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -32,11 +34,13 @@ public class Account {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "account_type")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
     private AccountType type;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "account_status")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
     private AccountStatus status;
 
     // BigDecimal for exact monetary arithmetic — never float or double

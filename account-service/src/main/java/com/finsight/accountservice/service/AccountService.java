@@ -67,7 +67,7 @@ public class AccountService {
     @Transactional(readOnly = true)
     public AccountResponse getActiveAccount(UUID accountId, UUID userId) {
         return accountRepository
-                .findActiveAccountByIdAndUserId(accountId, userId)
+                .findActiveAccountByIdAndUserId(accountId, userId, Account.AccountStatus.ACTIVE)
                 .map(this::toResponse)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,

@@ -3,6 +3,7 @@ package com.finsight.accountservice.repository;
 import com.finsight.accountservice.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,7 +28,8 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
     // and belongs to the requesting user
     @Query("SELECT a FROM Account a WHERE a.id = :id " +
             "AND a.userId = :userId " +
-            "AND a.status = 'ACTIVE'")
+            "AND a.status = :status")
     Optional<Account> findActiveAccountByIdAndUserId(
-            UUID id, UUID userId);
+            @Param("id") UUID id, @Param("userId") UUID userId,
+            @Param("status") Account.AccountStatus status);
 }

@@ -3,7 +3,9 @@ package com.finsight.budgetservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,7 +36,8 @@ public class Budget {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "budget_category")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
     private BudgetCategory category;
 
     @Column(name = "amount_limit", nullable = false,
@@ -49,7 +52,8 @@ public class Budget {
     private String currency;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "budget_period")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
     private BudgetPeriod period;
 
     @Column(name = "period_start", nullable = false)

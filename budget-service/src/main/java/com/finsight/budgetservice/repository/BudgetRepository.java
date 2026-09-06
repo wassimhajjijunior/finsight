@@ -4,6 +4,7 @@ import com.finsight.budgetservice.entity.Budget;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -25,9 +26,9 @@ public interface BudgetRepository extends JpaRepository<Budget, UUID> {
             "AND b.periodStart <= :date " +
             "AND b.periodEnd >= :date")
     List<Budget> findActiveBudgetsForCategory(
-            UUID userId,
-            Budget.BudgetCategory category,
-            LocalDate date
+            @Param("userId") UUID userId,
+            @Param("category") Budget.BudgetCategory category,
+            @Param("date") LocalDate date
     );
 
     // Find budgets that have exceeded threshold
@@ -35,7 +36,7 @@ public interface BudgetRepository extends JpaRepository<Budget, UUID> {
     @Query("SELECT b FROM Budget b WHERE b.userId = :userId " +
             "AND b.alertSent = false " +
             "AND (b.spentAmount / b.amountLimit * 100) >= b.alertThreshold")
-    List<Budget> findBudgetsExceedingThreshold(UUID userId);
+    List<Budget> findBudgetsExceedingThreshold(@Param("userId") UUID userId);
 
     // Atomic update of spent amount
     // Using @Modifying + @Query avoids loading the entity
@@ -44,7 +45,7 @@ public interface BudgetRepository extends JpaRepository<Budget, UUID> {
     @Query("UPDATE Budget b SET b.spentAmount = :spentAmount, " +
             "b.alertSent = :alertSent " +
             "WHERE b.id = :budgetId")
-    void updateSpentAmount(UUID budgetId,
-                           java.math.BigDecimal spentAmount,
-                           boolean alertSent);
+    void updateSpentAmount(@Param("budgetId") UUID budgetId,
+                           @Param("spentAmount") java.math.BigDecimal spentAmount,
+                           @Param("alertSent") boolean alertSent);
 }

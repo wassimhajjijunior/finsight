@@ -40,7 +40,7 @@ public class AccountController {
 
     @GetMapping("/{accountId}")
     public ResponseEntity<AccountResponse> getAccount(
-            @PathVariable UUID accountId,
+            @PathVariable(name = "accountId") UUID accountId,
             @RequestHeader("X-User-Id") UUID userId) {
 
         return ResponseEntity.ok(
@@ -51,7 +51,7 @@ public class AccountController {
     // Verifies account exists and is active before a transaction is added
     @GetMapping("/{accountId}/active")
     public ResponseEntity<AccountResponse> getActiveAccount(
-            @PathVariable UUID accountId,
+            @PathVariable(name = "accountId") UUID accountId,
             @RequestHeader("X-User-Id") UUID userId) {
 
         return ResponseEntity.ok(

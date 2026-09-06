@@ -3,6 +3,8 @@ package com.finsight.transactionservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,11 +31,13 @@ public class Transaction {
     private UUID accountId;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "transaction_type")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
     private TransactionType type;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "transaction_category")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
     private TransactionCategory category;
 
     @Column(nullable = false, precision = 19, scale = 4)
