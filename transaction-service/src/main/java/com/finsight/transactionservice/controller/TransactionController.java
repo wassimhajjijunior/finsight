@@ -45,7 +45,7 @@ public class TransactionController {
 
     @GetMapping("/{txId}")
     public ResponseEntity<TransactionResponse> getTransaction(
-            @PathVariable UUID txId,
+            @PathVariable("txId") UUID txId,
             @RequestHeader("X-User-Id") UUID userId) {
 
         return ResponseEntity.ok(
@@ -56,10 +56,10 @@ public class TransactionController {
     @GetMapping("/spending-summary")
     public ResponseEntity<BigDecimal> getSpendingSummary(
             @RequestHeader("X-User-Id") UUID userId,
-            @RequestParam UUID accountId,
-            @RequestParam String category,
-            @RequestParam LocalDateTime startDate,
-            @RequestParam LocalDateTime endDate) {
+            @RequestParam("accountId") UUID accountId,
+            @RequestParam("category") String category,
+            @RequestParam("startDate") LocalDateTime startDate,
+            @RequestParam("endDate") LocalDateTime endDate) {
 
         return ResponseEntity.ok(
                 transactionService.getCategorySpending(

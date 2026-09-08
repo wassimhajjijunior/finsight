@@ -4,6 +4,7 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.ai.model.huggingface.autoconfigure.HuggingfaceChatAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
   config:
     import:
       - optional:configserver:http://localhost:8888
@@ -43,8 +44,6 @@ spring:
         options:
           model: llama-3.1-8b-instant
           temperature: 0.3
-      embedding:
-        enabled: false
     huggingface:
       base-url: https://api-inference.huggingface.co
       api-key: ${HF_API_KEY}

@@ -38,7 +38,7 @@ public class BudgetController {
 
     @GetMapping("/{budgetId}")
     public ResponseEntity<BudgetResponse> getBudget(
-            @PathVariable UUID budgetId,
+            @PathVariable("budgetId") UUID budgetId,
             @RequestHeader("X-User-Id") UUID userId) {
 
         return ResponseEntity.ok(
@@ -48,7 +48,7 @@ public class BudgetController {
     // Manually trigger spending refresh for a budget
     @PostMapping("/{budgetId}/refresh")
     public ResponseEntity<BudgetResponse> refreshBudget(
-            @PathVariable UUID budgetId,
+            @PathVariable("budgetId") UUID budgetId,
             @RequestHeader("X-User-Id") UUID userId) {
 
         return ResponseEntity.ok(
