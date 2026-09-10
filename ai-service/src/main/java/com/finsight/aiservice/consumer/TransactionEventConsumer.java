@@ -2,6 +2,8 @@ package com.finsight.aiservice.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finsight.aiservice.service.EmbeddingService;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.Span;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,6 +24,7 @@ public class TransactionEventConsumer {
     private final EmbeddingService embeddingService;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
+    private final Tracer tracer;
 
     @KafkaListener(
             topics = "transaction.created",
@@ -34,7 +37,6 @@ public class TransactionEventConsumer {
 
         log.debug("Received transaction.created event key={}", eventKey);
 
-        // Idempotency check
         Boolean alreadyProcessed = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) > 0 FROM processed_events " +
                         "WHERE event_id = ?",
@@ -47,16 +49,27 @@ public class TransactionEventConsumer {
         }
 
         try {
-            // Parse the JSON event payload
             Map<String, Object> event = objectMapper.readValue(
                     payload,
                     new com.fasterxml.jackson.core.type.TypeReference<>() {}
             );
 
-            // Index the transaction for RAG
-            embeddingService.indexTransaction(event);
+            String transactionId = (String) event.get("transactionId");
+            String userId = (String) event.get("userId");
 
-            // Mark as processed in same transaction
+            Span span = tracer.nextSpan()
+                    .name("index-transaction-for-rag")
+                    .tag("transactionId", transactionId != null ? transactionId : "unknown")
+                    .tag("userId", userId != null ? userId : "unknown")
+                    .tag("eventKey", eventKey)
+                    .start();
+
+            try (Tracer.SpanInScope ws = tracer.withSpan(span)) {
+                embeddingService.indexTransaction(event);
+            } finally {
+                span.end();
+            }
+
             jdbcTemplate.update(
                     "INSERT INTO processed_events(event_id) VALUES (?)",
                     eventKey
@@ -67,7 +80,6 @@ public class TransactionEventConsumer {
         } catch (Exception e) {
             log.error("Failed to index transaction event: {}",
                     eventKey, e);
-            // Let the exception propagate — Kafka will retry
             throw new RuntimeException(
                     "Failed to process transaction event", e);
         }
