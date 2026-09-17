@@ -7,8 +7,8 @@ spring:
       - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
   config:
     import:
-      - optional:configserver:http://localhost:8888
-      - classpath:local-overrides.yml
+          - optional:configserver:http://localhost:8888
+          - classpath:local-overrides.yml
   cloud:
     config:
       retry:
@@ -45,15 +45,21 @@ spring:
           model: llama-3.1-8b-instant
           temperature: 0.3
     huggingface:
-      base-url: https://api-inference.huggingface.co
+      base-url: https://router.huggingface.co/hf-inference
       api-key: ${HF_API_KEY}
       embedding:
         options:
-          model: nomic-ai/nomic-embed-text-v1
+          model: nomic-ai/nomic-embed-text-v1.5
+
+management:
+  tracing:
+    enabled: true
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
 
 server:
   port: 8085
-
 eureka:
   client:
     service-url:

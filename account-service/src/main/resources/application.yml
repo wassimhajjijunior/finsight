@@ -3,8 +3,8 @@ spring:
     name: account-service
   config:
     import:
-      - optional:configserver:http://localhost:8888
-      - classpath:local-overrides.yml
+          - optional:configserver:http://localhost:8888
+          - classpath:local-overrides.yml
   cloud:
     config:
       retry:
