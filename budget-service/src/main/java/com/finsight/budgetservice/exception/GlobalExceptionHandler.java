@@ -1,5 +1,6 @@
-package com.finsight.accountservice.exception;
+package com.finsight.budgetservice.exception;
 
+import feign.FeignException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -16,15 +17,16 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Central exception contract for account-service.
+ * Central exception contract for budget-service.
  *
  * Every error leaves this service in the same shape:
  * {"detail": {"message": "...", "code": "...", "field": "..."}}
  *
  * Handlers:
  * - Validation (body, params, headers, unreadable payload) -> 400 VALIDATION_ERROR
- * - Domain/not-found errors already thrown by the service       -> mapped to their status
- * - Unexpected errors                                           -> safe generic 500, no internals leaked
+ * - Domain/not-found errors already thrown by the service   -> mapped to their status
+ * - Feign failures against transaction-service             -> 404 / 503 mapped to the contract
+ * - Unexpected errors                                      -> safe generic 500, no internals leaked
  */
 @Slf4j
 @RestControllerAdvice
@@ -115,6 +117,32 @@ public class GlobalExceptionHandler {
 
         log.warn("Request failed ({}): {}", status.value(), message);
         return build(status, message, codeFor(status), null);
+    }
+
+    /**
+     * Feign failures against transaction-service.
+     *
+     * transaction-service calls are protected by a Resilience4j fallback,
+     * so this handler is a safety net for failures that escape it.
+     */
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ApiErrorResponse> handleFeign(FeignException ex) {
+        int status = ex.status();
+
+        if (status == HttpStatus.NOT_FOUND.value()) {
+            log.warn("Upstream resource not found: {}", ex.getMessage());
+            return build(HttpStatus.NOT_FOUND,
+                    "Requested resource not found", "RESOURCE_NOT_FOUND", null);
+        }
+
+        if (status <= 0 || status >= HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+            log.error("Upstream service error: status={}", status, ex);
+            return build(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Upstream service unavailable", "SERVICE_UNAVAILABLE", null);
+        }
+
+        return build(HttpStatus.BAD_GATEWAY,
+                "Upstream service error", "UPSTREAM_ERROR", null);
     }
 
     @ExceptionHandler(Exception.class)

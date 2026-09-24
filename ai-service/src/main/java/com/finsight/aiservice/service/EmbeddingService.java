@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -36,11 +35,13 @@ public class EmbeddingService {
         String userId = (String) transactionEvent.get("userId");
 
         // Check if already indexed (idempotency)
+        // transaction_id column is never populated by PgVectorStore —
+        // the identifier lives in the metadata JSONB column.
         Boolean alreadyIndexed = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) > 0 FROM transaction_embeddings " +
-                        "WHERE transaction_id = ?",
+                        "WHERE metadata->>'transactionId' = ?",
                 Boolean.class,
-                UUID.fromString(transactionId)
+                transactionId
         );
 
         if (Boolean.TRUE.equals(alreadyIndexed)) {

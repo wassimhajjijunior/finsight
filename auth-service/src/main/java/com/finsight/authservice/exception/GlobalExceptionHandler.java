@@ -1,74 +1,125 @@
 package com.finsight.authservice.exception;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * Central exception contract for auth-service.
+ *
+ * Every error leaves this service in the same shape:
+ * {"detail": {"message": "...", "code": "...", "field": "..."}}
+ *
+ * Handlers:
+ * - AuthException (domain errors)                    -> its status + dedicated code
+ * - Validation (body, params, headers, payload)      -> 400 VALIDATION_ERROR
+ * - Unexpected errors                                -> safe generic 500, no internals leaked
+ */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Handle our custom auth exceptions
     @ExceptionHandler(AuthException.class)
-    public ResponseEntity<Map<String, Object>> handleAuthException(
+    public ResponseEntity<ApiErrorResponse> handleAuthException(
             AuthException ex) {
 
-        log.warn("Auth error: {}", ex.getMessage());
-
-        return ResponseEntity
-                .status(ex.getStatus())
-                .body(buildErrorBody(ex.getStatus(), ex.getMessage()));
+        log.warn("Auth error ({}): {}", ex.getCode(), ex.getMessage());
+        return build(ex.getStatus(), ex.getMessage(), ex.getCode(), null);
     }
 
-    // Handle @Valid validation failures
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(
+    public ResponseEntity<ApiErrorResponse> handleValidation(
             MethodArgumentNotValidException ex) {
 
-        Map<String, String> fieldErrors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String field = ((FieldError) error).getField();
-            String message = error.getDefaultMessage();
-            fieldErrors.put(field, message);
-        });
+        FieldError fieldError = ex.getBindingResult()
+                .getFieldErrors().stream().findFirst().orElse(null);
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Validation failed");
-        body.put("fields", fieldErrors);
+        String field = fieldError != null ? fieldError.getField() : null;
+        String message = fieldError != null
+                ? fieldError.getDefaultMessage()
+                : "Validation failed";
 
-        return ResponseEntity.badRequest().body(body);
+        log.warn("Validation error on field '{}': {}", field, message);
+        return build(HttpStatus.BAD_REQUEST, message, "VALIDATION_ERROR", field);
     }
 
-    // Catch-all for unexpected errors
-    // Never expose stack traces to clients
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConstraintViolation(
+            ConstraintViolationException ex) {
+
+        ConstraintViolation<?> violation = ex.getConstraintViolations()
+                .stream().findFirst().orElse(null);
+
+        String field = violation != null
+                ? violation.getPropertyPath().toString() : null;
+        String message = violation != null
+                ? violation.getMessage() : "Validation failed";
+
+        log.warn("Constraint violation on '{}': {}", field, message);
+        return build(HttpStatus.BAD_REQUEST, message, "VALIDATION_ERROR", field);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex) {
+
+        String field = ex.getName();
+        String message = "Invalid value for parameter '" + field + "'";
+        log.warn("Type mismatch on '{}': {}", field, ex.getValue());
+        return build(HttpStatus.BAD_REQUEST, message, "VALIDATION_ERROR", field);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnreadableBody(
+            HttpMessageNotReadableException ex) {
+
+        log.warn("Malformed request body: {}", ex.getMessage());
+        return build(HttpStatus.BAD_REQUEST,
+                "Malformed request body", "VALIDATION_ERROR", null);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingHeader(
+            MissingRequestHeaderException ex) {
+
+        String field = ex.getHeaderName();
+        String message = "Required header '" + field + "' is missing";
+        log.warn("Missing header '{}'", field);
+        return build(HttpStatus.BAD_REQUEST, message, "VALIDATION_ERROR", field);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingParameter(
+            MissingServletRequestParameterException ex) {
+
+        String field = ex.getParameterName();
+        String message = "Required parameter '" + field + "' is missing";
+        log.warn("Missing parameter '{}'", field);
+        return build(HttpStatus.BAD_REQUEST, message, "VALIDATION_ERROR", field);
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+    public ResponseEntity<ApiErrorResponse> handleGeneral(Exception ex) {
+        // Never leak stack traces or internal details to the client
         log.error("Unexpected error", ex);
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(buildErrorBody(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "An unexpected error occurred"
-                ));
+        return build(HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred", "INTERNAL_ERROR", null);
     }
 
-    private Map<String, Object> buildErrorBody(
-            HttpStatus status, String message) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("message", message);
-        return body;
+    private ResponseEntity<ApiErrorResponse> build(
+            HttpStatus status, String message, String code, String field) {
+        return ResponseEntity
+                .status(status)
+                .body(new ApiErrorResponse(new ApiError(message, code, field)));
     }
 }
