@@ -17,7 +17,8 @@ COPY eureka-server/src eureka-server/src
 
 # Repackage explicitly: the Spring Boot 4.x maven plugin no longer auto-binds
 # the repackage goal to the package phase from a bare plugin declaration.
-RUN mvn -B -f eureka-server/pom.xml -DskipTests package spring-boot:repackage
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B -f eureka-server/pom.xml -DskipTests package spring-boot:repackage
 
 # ---------- Stage 2: runtime (Java 21 JRE, non-root) ----------
 FROM eclipse-temurin:21-jre-jammy

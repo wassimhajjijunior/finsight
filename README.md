@@ -32,8 +32,9 @@ they are worth it.
 Users register, open accounts, record transactions, and set category budgets.
 When money moves, the system reacts asynchronously: transactions are indexed for
 semantic search, and notifications are emailed. An AI assistant answers questions
-such as *"how much did I spend on food last month?"* using retrieval over the
-user's own indexed transactions, with tool calls for live account data.
+such as *"how much did I spend on food last month?"* by calling live services
+through tool calling, and — when a funded embedding provider is configured —
+augments answers with retrieval over the user's indexed transaction history.
 
 ---
 
@@ -282,6 +283,12 @@ it demonstrates.
 
 - **No Kubernetes or GitOps.** Deployment is Docker Compose. The next step is
   images → `kind`/`k3d` → Argo CD, in that order.
+- **Semantic retrieval is currently disabled in the shipped demo.** The embedding
+  provider is HuggingFace Inference, and the demo account has no inference
+  credits. The assistant therefore answers through tool calling against live
+  services (which is verified working) while retrieval degrades gracefully to an
+  empty context. Supplying a funded `HF_API_KEY` re-enables RAG with no code
+  change.
 - **No RAG evaluation harness.** Retrieval quality is not measured. A golden set
   with recall@k and faithfulness scoring is the highest-value missing piece.
 - **RBAC is propagated but not enforced.** The role claim reaches services as a

@@ -279,7 +279,7 @@ services:
   # Configuration is injected with environment variables using Spring
   # Boot relaxed binding. No external config repository is required to
   # run this stack: SPRING_CLOUD_CONFIG_ENABLED=false disables the
-  # optional Config Server import, and EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  # optional Config Server import, and EUREKA_DEFAULT_ZONE
   # points discovery at the eureka-server container.
   # ---------------------------------------------------------------
 
@@ -313,7 +313,7 @@ services:
     environment:
       SERVER_PORT: 8080
       SPRING_CLOUD_CONFIG_ENABLED: "false"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/auth_db
@@ -340,7 +340,7 @@ services:
     environment:
       SERVER_PORT: 8080
       SPRING_CLOUD_CONFIG_ENABLED: "false"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
       SPRING_DATASOURCE_URL: jdbc:postgresql://account-db:5432/account_db
@@ -366,7 +366,7 @@ services:
     environment:
       SERVER_PORT: 8080
       SPRING_CLOUD_CONFIG_ENABLED: "false"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
       SPRING_DATASOURCE_URL: jdbc:postgresql://transaction-db:5432/transaction_db
@@ -393,7 +393,7 @@ services:
     environment:
       SERVER_PORT: 8080
       SPRING_CLOUD_CONFIG_ENABLED: "false"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
       SPRING_DATASOURCE_URL: jdbc:postgresql://budget-db:5432/budget_db
@@ -420,7 +420,7 @@ services:
     environment:
       SERVER_PORT: 8080
       SPRING_CLOUD_CONFIG_ENABLED: "false"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
       MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
@@ -430,6 +430,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       GROQ_API_KEY: ${GROQ_API_KEY:?GROQ_API_KEY must be set}
       HF_API_KEY: ${HF_API_KEY:?HF_API_KEY must be set}
+      SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: ${GROQ_CHAT_MODEL:-qwen/qwen3.8-27b}
     ports:
       - "18085:8080"
     networks:
@@ -452,7 +453,7 @@ services:
     environment:
       SERVER_PORT: 8080
       SPRING_CLOUD_CONFIG_ENABLED: "false"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
       SPRING_DATASOURCE_URL: jdbc:postgresql://notification-db:5432/notification_db
@@ -487,7 +488,7 @@ services:
     environment:
       SERVER_PORT: 8080
       SPRING_CLOUD_CONFIG_ENABLED: "false"
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,gateway,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
       SPRING_DATA_REDIS_HOST: redis

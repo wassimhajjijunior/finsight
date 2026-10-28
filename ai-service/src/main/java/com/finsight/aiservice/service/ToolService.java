@@ -66,10 +66,13 @@ public class ToolService {
         String userId = CURRENT_USER.get();
         log.info("Tool called: getRecentTransactions userId={}", userId);
 
+        TransactionClient.TransactionPage page =
+                transactionClient.getRecentTransactions(userId, 0, 10);
+
         List<TransactionClient.TransactionSummary> transactions =
-                transactionClient.getRecentTransactions(userId, 0, 10)
-                        .stream()
-                        .collect(Collectors.toList());
+                page != null && page.getContent() != null
+                        ? page.getContent()
+                        : List.of();
 
         if (transactions.isEmpty()) {
             return "No recent transactions found.";

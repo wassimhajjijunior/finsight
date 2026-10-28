@@ -4,7 +4,7 @@ spring:
   config:
     import:
           - optional:configserver:http://localhost:8888
-          - classpath:local-overrides.yml
+          - optional:classpath:local-overrides.yml
   cloud:
     config:
       retry:
@@ -15,3 +15,8 @@ spring:
 
 jwt:
   secret: your-very-long-secret-key-minimum-256-bits-change-this-in-production
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
