@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface TransactionClient {
 
     @GetMapping("/transactions")
-    List<TransactionSummary> getRecentTransactions(
+    TransactionPage getRecentTransactions(
             @RequestHeader("X-User-Id") String userId,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
@@ -28,6 +28,11 @@ public interface TransactionClient {
             @RequestParam(name = "startDate") String startDate,
             @RequestParam(name = "endDate") String endDate
     );
+
+    @Data
+    class TransactionPage {
+        private List<TransactionSummary> content;
+    }
 
     @Data
     class TransactionSummary {

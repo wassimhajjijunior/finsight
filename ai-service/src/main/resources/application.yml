@@ -8,7 +8,7 @@ spring:
   config:
     import:
           - optional:configserver:http://localhost:8888
-          - classpath:local-overrides.yml
+          - optional:classpath:local-overrides.yml
   cloud:
     config:
       retry:
@@ -42,14 +42,14 @@ spring:
       api-key: ${GROQ_API_KEY}
       chat:
         options:
-          model: llama-3.1-8b-instant
+          model: openai/gpt-oss-120b
           temperature: 0.3
     huggingface:
       base-url: https://router.huggingface.co/hf-inference
       api-key: ${HF_API_KEY}
       embedding:
         options:
-          model: nomic-ai/nomic-embed-text-v1.5
+          model: BAAI/bge-base-en-v1.5
 
 management:
   tracing:
@@ -63,6 +63,6 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true

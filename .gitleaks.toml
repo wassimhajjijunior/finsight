@@ -1,0 +1,24 @@
+# Gitleaks configuration.
+#
+# Scans tracked files only (the CI job runs the action against the working
+# tree). Local credential files such as **/local-overrides.yml are git-ignored
+# and therefore never present in a CI checkout.
+
+title = "FinSight secret scan"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known non-secret placeholders and documentation examples"
+
+# Explicit placeholder values that are not real credentials.
+regexes = [
+  '''your-very-long-secret-key-minimum-256-bits-change-this-in-production''',
+  '''gsk_\.\.\.''',
+  '''hf_\.\.\.''',
+]
+
+paths = [
+  '''docs/backend-platform-applied-ai/.*''',
+]

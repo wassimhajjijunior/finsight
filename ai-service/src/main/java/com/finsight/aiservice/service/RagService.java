@@ -60,9 +60,10 @@ public class RagService {
         // Step 1: Save user message
         saveMessage(userId, sessionId, "user", request.getMessage());
 
-        // Step 2: Retrieve relevant transactions from pgvector
-        List<Document> relevantDocs = embeddingService
-                .retrieveRelevantTransactions(request.getMessage(), userId, 5);
+        // Step 2: Retrieve relevant transactions from pgvector.
+        // Retrieval is best-effort: when the embedding provider is unavailable,
+        // the assistant still answers using live data through tool calls.
+        List<Document> relevantDocs = retrieveSafely(request.getMessage(), userId);
 
         String ragContext = buildRagContext(relevantDocs);
 
@@ -131,6 +132,16 @@ public class RagService {
         return docs.stream()
                 .map(Document::getText)
                 .collect(Collectors.joining("\n- ", "- ", ""));
+    }
+
+    private List<Document> retrieveSafely(String query, String userId) {
+        try {
+            return embeddingService.retrieveRelevantTransactions(query, userId, 5);
+        } catch (RuntimeException e) {
+            log.warn("Semantic retrieval unavailable, answering without RAG context: {}",
+                    e.getMessage());
+            return List.of();
+        }
     }
 
     private String loadConversationHistory(String userId,
