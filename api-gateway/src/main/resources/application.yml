@@ -3,6 +3,39 @@ spring:
     name: api-gateway
   config:
     import: optional:configserver:http://localhost:8888
+  cloud:
+    gateway:
+      routes:
+        - id: auth-route
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+        - id: account-route
+          uri: lb://account-service
+          predicates:
+            - Path=/api/accounts/**
+          filters:
+            - StripPrefix=1
+        - id: transaction-route
+          uri: lb://transaction-service
+          predicates:
+            - Path=/api/transactions/**
+          filters:
+            - StripPrefix=1
+        - id: budget-route
+          uri: lb://budget-service
+          predicates:
+            - Path=/api/budgets/**
+          filters:
+            - StripPrefix=1
+        - id: ai-route
+          uri: lb://ai-service
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - StripPrefix=1
 
 management:
   endpoints:

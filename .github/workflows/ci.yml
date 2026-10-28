@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "21"
+  REGISTRY: ghcr.io
+
+jobs:
+
+  build:
+    name: Build all modules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Compile and package every module
+        run: mvn -B -ntp clean install -DskipTests
+
+      - name: Upload service jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-jars
+          path: |
+            */target/*.jar
+            !*/target/*.jar.original
+          retention-days: 3
+
+  unit-tests:
+    name: Contract tests (no infrastructure required)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Run standalone REST error-contract tests
+        run: >
+          mvn -B -ntp test
+          -Dtest=GlobalExceptionHandlerTest
+          -DfailIfNoTests=false
+          -Dsurefire.failIfNoSpecifiedTests=false
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run gitleaks on tracked files
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: ${{ github.workspace }}/.gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: "false"
+
+  docker-images:
+    name: Build service images
+    runs-on: ubuntu-latest
+    needs: [build]
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - eureka-server
+          - api-gateway
+          - auth-service
+          - account-service
+          - transaction-service
+          - budget-service
+          - ai-service
+          - notification-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build ${{ matrix.service }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.service }}/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}

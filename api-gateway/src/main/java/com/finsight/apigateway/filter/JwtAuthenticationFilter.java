@@ -34,9 +34,6 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        // Check route metadata from gateway config
-        String skipAuthMeta = exchange.getRequest().getHeaders().getFirst("skip-auth");
-
         // Get the path — check if it is a public path
         String path = request.getURI().getPath();
         if (isPublicPath(path)) {
@@ -76,6 +73,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private boolean isPublicPath(String path) {
         return path.startsWith("/api/auth/login")
                 || path.startsWith("/api/auth/register")
+                || path.startsWith("/api/auth/refresh")
+                || path.startsWith("/api/auth/logout")
                 || path.startsWith("/actuator");
     }
 

@@ -1,0 +1,31 @@
+# Dockerfile-specific ignore file for auth-service/Dockerfile.
+# Build context is the repository root; these patterns shrink the context
+# sent to the daemon and keep local secrets/artifacts out of the build.
+
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# IDE / editor
+.idea
+.vscode
+*.iml
+.project
+.classpath
+.settings
+.factorypath
+.settings/
+
+# Build output — never send target dirs of any module
+**/target
+
+# Maven wrapper (the maven image provides its own mvn)
+.mvn
+mvnw
+mvnw.cmd
+
+# Local environment / secrets — never enter the build
+**/.env
+**/.env.*
+**/local-overrides.yml

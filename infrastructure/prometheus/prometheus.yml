@@ -11,48 +11,48 @@ scrape_configs:
   - job_name: 'api-gateway'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['api-gateway:8080']
         labels:
           service: 'api-gateway'
 
   - job_name: 'auth-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:18082']
+      - targets: ['auth-service:8080']
         labels:
           service: 'auth-service'
 
   - job_name: 'account-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:18084']
+      - targets: ['account-service:8080']
         labels:
           service: 'account-service'
 
   - job_name: 'transaction-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:18083']
+      - targets: ['transaction-service:8080']
         labels:
           service: 'transaction-service'
 
   - job_name: 'budget-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:18086']
+      - targets: ['budget-service:8080']
         labels:
           service: 'budget-service'
 
   - job_name: 'ai-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:18085']
+      - targets: ['ai-service:8080']
         labels:
           service: 'ai-service'
 
   - job_name: 'notification-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:18087']
+      - targets: ['notification-service:8080']
         labels:
           service: 'notification-service'
