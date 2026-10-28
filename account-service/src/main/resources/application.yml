@@ -14,7 +14,7 @@ spring:
       fail-fast: false
 
 jwt:
-  secret: your-very-long-secret-key-minimum-256-bits-change-this-in-production
+  secret: ${JWT_SECRET:your-very-long-secret-key-minimum-256-bits-change-this-in-production}
 
 eureka:
   client:
